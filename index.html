@@ -101,13 +101,48 @@ input[type=file]{display:none}
      await video.play();capture.disabled=false;setStatus('Kamera aktif. Letakkan IC dalam bingkai dan ambil gambar.');
    }catch(e){setStatus('Kamera tidak dapat dibuka: '+e.message)}
  });
- capture.addEventListener('click',()=>{
-   if(video.videoWidth) renderImage(video);
- });
- retake.addEventListener('click',()=>{
-   captured=false;canvas.style.display='none';video.style.display='block';mark.style.display='block';
-   capture.disabled=false;retake.disabled=true;download.disabled=true;setStatus('Sedia untuk mengambil gambar semula.');
- });
+ capture.addEventListener('click', async () => {
+  try {
+    if (!video.srcObject || video.readyState < 2) {
+      setStatus('Kamera belum bersedia. Cuba lagi.');
+      return;
+    }
+
+    await new Promise(resolve =>
+      requestAnimationFrame(() =>
+        requestAnimationFrame(resolve)
+      )
+    );
+
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+
+    if (!w || !h) {
+      setStatus('Saiz video tidak dapat dibaca.');
+      return;
+    }
+
+    canvas.width = w;
+    canvas.height = h;
+
+    ctx.drawImage(video, 0, 0, w, h);
+    drawWatermark();
+
+    canvas.style.display = 'block';
+    video.style.display = 'none';
+    mark.style.display = 'none';
+
+    captured = true;
+    capture.disabled = true;
+    retake.disabled = false;
+    download.disabled = false;
+
+    setStatus('Gambar berjaya diambil. Tekan Muat turun JPG.');
+
+  } catch (error) {
+    setStatus('Ralat mengambil gambar: ' + error.message);
+  }
+});
  download.addEventListener('click',()=>{
    if(!captured)return;
    canvas.toBlob(blob=>{
