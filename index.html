@@ -64,14 +64,35 @@ input[type=file]{display:none}
    for(let y=-h;y<=h;y+=fontSize*2.4){ctx.strokeText(watermark,0,y);ctx.fillText(watermark,0,y)}
    ctx.restore();
  }
- function renderImage(img){
-   const maxW=1800,maxH=1400,scale=Math.min(1,maxW/img.width,maxH/img.height);
-   canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
-   ctx.drawImage(img,0,0,canvas.width,canvas.height);drawWatermark();
-   video.style.display='none';mark.style.display='none';canvas.style.display='block';
-   captured=true;capture.disabled=true;retake.disabled=false;download.disabled=false;
-   setStatus('Gambar dengan watermark telah disediakan. Tekan “Muat turun JPG”.');
- }
+ function renderImage(source){
+  const sourceW = source.videoWidth || source.naturalWidth || source.width;
+  const sourceH = source.videoHeight || source.naturalHeight || source.height;
+
+  if (!sourceW || !sourceH) {
+    setStatus('Imej belum bersedia. Cuba lagi.');
+    return;
+  }
+
+  const maxW = 1800, maxH = 1400;
+  const scale = Math.min(1, maxW/sourceW, maxH/sourceH);
+
+  canvas.width = Math.round(sourceW * scale);
+  canvas.height = Math.round(sourceH * scale);
+
+  ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+  drawWatermark();
+
+  video.style.display = 'none';
+  mark.style.display = 'none';
+  canvas.style.display = 'block';
+
+  captured = true;
+  capture.disabled = true;
+  retake.disabled = false;
+  download.disabled = false;
+
+  setStatus('Gambar dengan watermark telah disediakan. Tekan Muat turun JPG.');
+}
  start.addEventListener('click',async()=>{
    try{
      if(!navigator.mediaDevices?.getUserMedia) throw new Error('Browser atau sambungan ini tidak menyokong akses kamera. Buka melalui HTTPS.');
